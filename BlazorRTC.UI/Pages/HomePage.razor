@@ -1,0 +1,15 @@
+﻿@page "/"
+@implements IAsyncDisposable
+@inject IJSRuntime js
+
+@if (meetingStarted)
+{
+    <CallScreen />
+}
+else
+{
+    <MudPaper Class="d-flex justify-center align-content-center" Height="700px" Elevation="0">
+        <MeetingForm OnSubmit="CreateMeeting" />
+    </MudPaper>
+}
+

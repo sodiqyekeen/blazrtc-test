@@ -1,12 +1,31 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudSpacer />
         <MudText Typo="Typo.h5" Class="ml-3">BlazRTC</MudText>
+        @if (!string.IsNullOrEmpty(_appStateManager.CurrentMeetingId))
+        {
+            <MudText Class="ml-3">
+                (Meeting Id: @_appStateManager.CurrentMeetingId)
+            </MudText>
+        }
         <MudSpacer />
     </MudAppBar>
     <MudMainContent>
         @Body
     </MudMainContent>
 </MudLayout>
+
+@code {
+    protected override void OnInitialized()
+    {
+        _appStateManager.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        _appStateManager.OnChange -= StateHasChanged;
+    }
+}

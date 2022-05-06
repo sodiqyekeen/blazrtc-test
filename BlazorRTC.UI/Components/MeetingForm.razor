@@ -1,0 +1,18 @@
+﻿<MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
+    <EditForm Model="meetingForm" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <div class="d-flex align-end">
+            <MudTextField @bind-Value="meetingForm.Username" For="(()=> meetingForm.Username)" Label="Username" />
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
+        </div>
+    </EditForm>
+</MudPaper>
+
+@code {
+    CreateMeetingRequest meetingForm = new();
+
+    [Parameter]
+    public EventCallback<CreateMeetingRequest> OnSubmit { get; set; }
+
+    async Task HandleSubmit() => await OnSubmit.InvokeAsync(meetingForm);
+}

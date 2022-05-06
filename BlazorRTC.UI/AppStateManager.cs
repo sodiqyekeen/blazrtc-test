@@ -4,22 +4,20 @@ namespace BlazorRTC.UI
 {
     public class AppStateManager
     {
-        private readonly ILocalStorageService _localStorage;
+        private string? _currentMeetingId;
 
-        public AppStateManager(ILocalStorageService localStorage)
+        public string? CurrentMeetingId
         {
-            _localStorage=localStorage;
-        }
-
-        public string? ConnectionId
-        {
-            get => _localStorage.GetItemAsStringAsync("connId").Result;
+            get => _currentMeetingId;
             set
             {
-                var _connectionId = _localStorage.GetItemAsStringAsync("connId").Result;
-                if (string.IsNullOrEmpty(_connectionId))
-                    _localStorage.SetItemAsStringAsync("connId", value).GetAwaiter().GetResult();
+                _currentMeetingId = value;
+                NotifyStateChange();
             }
         }
+
+        public event Action? OnChange;
+
+        private void NotifyStateChange() => OnChange?.Invoke();
     }
 }

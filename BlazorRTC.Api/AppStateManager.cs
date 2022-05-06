@@ -4,6 +4,8 @@
     {
         private List<User> _users = new();
         private List<CallGroup> _groups = new();
+        private List<Meeting> _meetings = new();
+        #region Old Method
 
         public void SaveUser(string id, string? username = null)
         {
@@ -52,6 +54,13 @@
             if (group==null)
                 return;
             group.Candidates.Add(candidate);
+        } 
+        #endregion
+
+        public void CreateMeeting(string id, string username)
+        {
+            var meeting = new Meeting(id, username);
+            
         }
 
     }
@@ -61,6 +70,21 @@
     public record CallGroup(string id, object offer, object? answer = null)
     {
         public List<object> Candidates { get; set; } = new();
+    }
+
+    public class Meeting
+    {
+        public Meeting(string id, string username)
+        {
+            Id=id;
+            Username=username;
+            Candidates = new();
+        }
+        public string Id { get; set; }
+        public string Username { get; set; }
+        public object? Offer { get; set; }
+        public object? Answer { get; set; }
+        public List<object> Candidates { get; set; }
     }
 
     //public class Call
