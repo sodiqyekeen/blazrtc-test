@@ -1,0 +1,58 @@
+﻿@page "/"
+@using System.Text
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IJSRuntime jsRuntime
+@implements IAsyncDisposable
+@inject HttpClient _httpClient;
+
+@*<MudText >@text</MudText>
+    <MudPaper Class="participant">
+
+    </MudPaper>*@
+
+<MudPaper Class="d-flex flex-grow-1 my-6 mx-16 overflow-scroll position-fixed" Height="630px" Elevation="5">
+
+    <MudPaper Class="flex-none d-flex " Width="450px" Elevation="0" Outlined="true">
+        <MudContainer Class="px-0">
+            <MudAppBar Color="Color.Primary" Fixed="false" Elevation="0">
+                <MudPaper Square="true" Height="45px" Width="45px" Style="border-radius:50%;" />
+                <MudText Class="ml-3" Typo="Typo.body1">@id</MudText>
+                <MudSpacer />
+                <MudSwitch T="bool" CheckedChanged="ToggleStatus" ThumbIcon="@thumbIcon" ThumbIconColor="@thumbColour">@(online?"Online":"Offline")</MudSwitch>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Call" Color="Color.Inherit" Disabled="@(!online)" OnClick="CreateOffer" />
+                <MudIconButton Icon="@Icons.Material.Filled.Message" Color="Color.Inherit" OnClick="SendMessage" />
+            </MudAppBar>
+            <MudPaper Width="100%" Height="100%">
+                <MudList Clickable="true">
+                    @foreach (var user in users.Where(u => u !=  id))
+                    {
+                        <MudListItem Text="@user" Icon="@Icons.Material.Filled.SupervisedUserCircle" OnClick="@(()=>JoinCall(user))" />
+                        @*<MudListItem Text="@user" Icon="@Icons.Material.Filled.SupervisedUserCircle" />*@
+                    }
+
+                </MudList>
+            </MudPaper>
+        </MudContainer>
+    </MudPaper>
+    <MudPaper Class="flex-auto d-flex " Elevation="0">
+        <MudContainer Class="px-0">
+            <MudAppBar Color="Color.Primary" Fixed="false" Elevation="0">
+                <MudPaper Square="true" Height="45px" Width="45px" Style="border-radius:50%;" />
+                <MudText Class="ml-3" Typo="Typo.body1">Username</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Outlined.Search" Color="Color.Inherit" />
+                <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" />
+            </MudAppBar>
+            <MudContainer id="video-call-div" Class="px-0">
+
+                <video muted id="local-video" autoplay></video>
+                <video id="remote-video" autoplay ></video>
+                <div class="call-action-div">
+                    @* <button onclick="muteVideo()">Mute Video</button>
+                        <button onclick="muteAudio()">Mute Audio</button>*@
+                </div>
+            </MudContainer>
+        </MudContainer>
+    </MudPaper>
+</MudPaper>
