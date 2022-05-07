@@ -29,10 +29,6 @@ window.createPeerOffer = async (caller) => {
                     return
                 caller.invokeMethodAsync("addcandidate", e.candidate);
             }
-            //sendChannel = peerConnection.createDataChannel("sendChannel");
-            //sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
-            //sendChannel.onopen = e => console.log("open!!!!");
-            //sendChannel.onclose = e => console.log("closed!!!!!!");
 
             const offer = await peerConnection.createOffer();
             console.log('offer created ', offer);
@@ -74,17 +70,7 @@ window.joinCall = async (caller, offer, id) => {
                 if (e.candidate == null)
                     return
                 caller.invokeMethodAsync("sendcandidate", e.candidate);
-                // console.info("New ice candidate.\n" + JSON.stringify(e.candidate));
             }
-
-            //peerConnection.ondatachannel = e => {
-            //    console.info('data channel received...')
-            //    sendChannel = e.channel;
-            //    sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
-            //    sendChannel.onopen = e => console.log("open!!!!");
-            //    sendChannel.onclose = e => console.log("closed!!!!!!");
-            //    peerConnection.channel = sendChannel;
-            //}
 
             peerConnection.setRemoteDescription(offer);
             console.info('creating answer...')
@@ -141,3 +127,11 @@ async function hangup() {
         localStream = null;
     }
 };
+
+function toggleVideo(status) {
+    localStream.getVideoTracks()[0].enabled = status
+}
+
+function toggleMic(status) {
+    localStream.getAudioTracks()[0].enabled = status
+}

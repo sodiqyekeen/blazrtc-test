@@ -3,13 +3,20 @@
     <video muted id="local-video" autoplay></video>
     <video id="remote-video" autoplay></video>
     <div class="call-action-div">
-        <MudFab id="end-button" 
-        Disabled="@(!_appStateManager.MeetingStarted)" 
-        StartIcon="@Icons.Material.Filled.CallEnd" 
-        Color="Color.Error" 
-        OnClick="InvokeHangUp" />
-        <MudFab id="end-button" StartIcon="@Icons.Material.Filled.MicOff" Color="Color.Warning" />
-        <MudFab id="end-button" StartIcon="@Icons.Material.Filled.VideocamOff" Color="Color.Warning" />
+        <MudFab id="end-button"
+                Disabled="@(!_appStateManager.MeetingStarted)"
+                StartIcon="@Icons.Material.Filled.CallEnd"
+                Color="Color.Error"
+                OnClick="InvokeHangUp" />
+        <MudFab id="end-button"
+                StartIcon="@(_appStateManager.MicOff? Icons.Material.Filled.Mic : Icons.Material.Filled.MicOff)"
+                Color="Color.Warning"
+                OnClick="InvokeToggleMic" />
+
+        <MudFab id="end-button"
+                StartIcon="@(_appStateManager.VideoOff? Icons.Material.Filled.Videocam: Icons.Material.Filled.VideocamOff)"
+                Color="Color.Warning"
+                OnClick="InvokeToggleVideo" />
     </div>
 </MudContainer>
 
@@ -20,5 +27,13 @@
     [Parameter]
     public EventCallback<MouseEventArgs> OnHangUp { get; set; }
 
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnToggleMic { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnToggleVideo { get; set; }
+
     async Task InvokeHangUp() => await OnHangUp.InvokeAsync();
+    async Task InvokeToggleMic() => await OnToggleMic.InvokeAsync();
+    async Task InvokeToggleVideo() => await OnToggleVideo.InvokeAsync();
 }

@@ -8,7 +8,7 @@ namespace BlazorRTC.UI.Pages
 {
     public partial class HomePage
     {
-        bool meetingStarted;
+
         string? meetingId;
         private IJSObjectReference? module;
         private DotNetObjectReference<HomePage>? dotNetHelper;
@@ -79,10 +79,11 @@ namespace BlazorRTC.UI.Pages
 
         public async Task CreateMeeting(CreateMeetingRequest request)
         {
-            meetingId=Guid.NewGuid().ToString()[..6];
+            meetingId=Guid.NewGuid().ToString()[..9];
             _appStateManager.CurrentMeetingId=meetingId;
             _appStateManager.Role = "caller";
             _appStateManager.MeetingStarted=true;
+
             await js.InvokeVoidAsync("createPeerOffer", dotNetHelper);
         }
 
@@ -104,7 +105,18 @@ namespace BlazorRTC.UI.Pages
             _appStateManager.Role= null;
         }
 
-        async Task ToggleStatus(bool status)
+        async Task ToggleVideo()
+        {
+            await js.InvokeVoidAsync("toggleVideo", _appStateManager.VideoOff);
+            _appStateManager.VideoOff = !_appStateManager.VideoOff;
+        }
+        async Task ToggleMic()
+        {
+            await js.InvokeVoidAsync("toggleMic", _appStateManager.MicOff);
+            _appStateManager.MicOff = !_appStateManager.MicOff;
+        }
+
+        void ToggleStatus(bool status)
         {
             joinMeeting=!joinMeeting;
             thumbIcon =joinMeeting ? Icons.Material.Filled.AddIcCall : Icons.Material.Filled.Call;

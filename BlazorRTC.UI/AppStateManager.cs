@@ -7,6 +7,9 @@ namespace BlazorRTC.UI
         private string? _currentMeetingId;
         private string? _role;
         private bool _meetingStarted;
+        private bool _videoOn;
+        private bool _micOn;
+        private bool _speakerOn;
         public string? CurrentMeetingId
         {
             get => _currentMeetingId;
@@ -32,6 +35,35 @@ namespace BlazorRTC.UI
             set
             {
                 _meetingStarted=value;
+                NotifyStateChange();
+            }
+        }
+
+        public bool VideoOff
+        {
+            get => _videoOn;
+            set
+            {
+                _videoOn=value;
+                NotifyStateChange();
+            }
+        }
+        public bool MicOff
+        {
+            get => _micOn;
+            set
+            {
+                _micOn=value;
+                NotifyStateChange();
+            }
+        }
+
+        public bool SpeakerOn
+        {
+            get => _speakerOn;
+            set
+            {
+                _speakerOn=value;
                 NotifyStateChange();
             }
         }

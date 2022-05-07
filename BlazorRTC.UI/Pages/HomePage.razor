@@ -6,7 +6,7 @@
 
 @if (_appStateManager.MeetingStarted)
 {
-    <CallScreen OnHangUp="HangUp" />
+    <CallScreen OnHangUp="HangUp" OnToggleMic="ToggleMic" OnToggleVideo="ToggleVideo" />
 }
 else
 {
