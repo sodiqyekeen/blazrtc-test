@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
+using System.Net.Http.Json;
 
 namespace BlazorRTC.UI.Pages
 {
@@ -13,7 +14,8 @@ namespace BlazorRTC.UI.Pages
         private DotNetObjectReference<HomePage>? dotNetHelper;
         private HubConnection? hubConnection;
         private CancellationTokenSource cts = new();
-
+        bool joinMeeting = true;
+        string thumbIcon = Icons.Material.Filled.AddIcCall;
         protected override async Task OnInitializedAsync()
         {
             dotNetHelper = DotNetObjectReference.Create(this);
@@ -28,7 +30,7 @@ namespace BlazorRTC.UI.Pages
 
             hubConnection?.On<string, object>("Candidate", async (sender, candidate) =>
             {
-                if (_appStateManager.CurrentMeetingId!=sender)
+                if (_appStateManager.CurrentMeetingId ==sender&& _appStateManager.Role is "caller")
                     await js.InvokeVoidAsync("handleCandidate", candidate);
             });
 
@@ -37,7 +39,7 @@ namespace BlazorRTC.UI.Pages
 
             hubConnection?.On<string, object>("Answer", async (id, answer) =>
             {
-                if (_appStateManager.CurrentMeetingId==id)
+                if (_appStateManager.CurrentMeetingId==id && _appStateManager.Role is "caller")
                     await js.InvokeVoidAsync("handleAnser", answer);
             });
 
@@ -79,20 +81,27 @@ namespace BlazorRTC.UI.Pages
         {
             meetingId=Guid.NewGuid().ToString();
             _appStateManager.CurrentMeetingId=meetingId;
-
-            meetingStarted=true;
-            StateHasChanged();
+            _appStateManager.Role = "caller";
+            _appStateManager.MeetingStarted=true;
             await js.InvokeVoidAsync("createPeerOffer", dotNetHelper);
         }
 
+        public async Task JoinMeeting(JoinMeetingRequest request)
+        {
+            _appStateManager.CurrentMeetingId = request.Meetingid;
+            _appStateManager.Role = "receiver";
+            var offer = await _httpClient.GetFromJsonAsync<object>($"offers/{_appStateManager.CurrentMeetingId}");
+            Console.WriteLine($"Offer: " + offer);
+            _appStateManager.MeetingStarted=true;
+            await js.InvokeVoidAsync("joinCall", dotNetHelper, offer, _appStateManager.CurrentMeetingId);
+        }
 
-        //async Task InvokeHubFunction(string functionName, params object?[] args)
-        //{
-        //    if (hubConnection != null)
-        //    {
-        //        await module.InvokeVoidAsync(functionName, args);
-        //    }
-        //}
+        async Task ToggleStatus(bool status)
+        {
+            joinMeeting=!joinMeeting;
+            thumbIcon =joinMeeting ? Icons.Material.Filled.AddIcCall : Icons.Material.Filled.Call;
+            StateHasChanged();
+        }
 
         public async Task<bool> ConnectWithRetryAsync(HubConnection hubConnection, CancellationToken cancellationToken)
         {

@@ -1,18 +1,41 @@
-﻿<MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
-    <EditForm Model="meetingForm" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
-        <div class="d-flex align-end">
-            <MudTextField @bind-Value="meetingForm.Username" For="(()=> meetingForm.Username)" Label="Username" />
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
-        </div>
-    </EditForm>
-</MudPaper>
-
+﻿@if (Join)
+{
+    <MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
+        <EditForm Model="joinForm" OnValidSubmit="HandleJoinSubmit">
+            <DataAnnotationsValidator />
+            <div class="d-flex align-end">
+                <MudTextField @bind-Value="joinForm.Username" For="(()=> joinForm.Username)" Label="Username" />
+                <MudTextField Class="mx-2" @bind-Value="joinForm.Meetingid" For="(()=> joinForm.Meetingid)" Label="MeetingId" />
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
+            </div>
+        </EditForm>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
+        <EditForm Model="meetingForm" OnValidSubmit="HandleNewSubmit">
+            <DataAnnotationsValidator />
+            <div class="d-flex align-end">
+                <MudTextField @bind-Value="meetingForm.Username" For="(()=> meetingForm.Username)" Label="Username" />
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
+            </div>
+        </EditForm>
+    </MudPaper>
+}
 @code {
     CreateMeetingRequest meetingForm = new();
+    JoinMeetingRequest joinForm = new();
 
     [Parameter]
-    public EventCallback<CreateMeetingRequest> OnSubmit { get; set; }
+    public bool Join { get; set; }
 
-    async Task HandleSubmit() => await OnSubmit.InvokeAsync(meetingForm);
+    [Parameter]
+    public EventCallback<CreateMeetingRequest> OnSubmitNew { get; set; }
+    
+    [Parameter]
+    public EventCallback<JoinMeetingRequest> OnSubmitJoin { get; set; }
+
+    async Task HandleNewSubmit() => await OnSubmitNew.InvokeAsync(meetingForm);
+    async Task HandleJoinSubmit() => await OnSubmitJoin.InvokeAsync(joinForm);
 }

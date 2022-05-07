@@ -1,15 +1,18 @@
 ﻿@page "/"
 @implements IAsyncDisposable
 @inject IJSRuntime js
+@inject HttpClient _httpClient;
 
-@if (meetingStarted)
+@if (_appStateManager.MeetingStarted)
 {
     <CallScreen />
 }
 else
 {
-    <MudPaper Class="d-flex justify-center align-content-center" Height="700px" Elevation="0">
-        <MeetingForm OnSubmit="CreateMeeting" />
+
+    <MudPaper Class="d-flex  justify-center align-content-center" Height="700px" Elevation="0">
+        <MudSwitch T="bool" CheckedChanged="ToggleStatus" ThumbIcon="@thumbIcon">@(joinMeeting?"Join Call":"Start Call")</MudSwitch>
+        <MeetingForm OnSubmitNew="CreateMeeting" OnSubmitJoin="JoinMeeting" Join="joinMeeting" />
     </MudPaper>
 }
 

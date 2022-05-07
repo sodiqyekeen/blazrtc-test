@@ -6,9 +6,9 @@ namespace BlazorRTC.Shared.Models
     {
         [Required]
         public string? Username { get; set; }
-    } 
-    
-    public class JoinMeetingRequest
+    }
+
+    public class JoinMeetingRequest : CreateMeetingRequest
     {
         [Required]
         public string? Meetingid { get; set; }

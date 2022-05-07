@@ -26,8 +26,8 @@
 
         public void StartCall(string id, object offer)
         {
-            if (_users.All(u => u.id != id))
-                return;
+            //if (_users.All(u => u.id != id))
+            //    return;
             _groups.Add(new CallGroup(id, offer));
         }
 
