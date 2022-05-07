@@ -28,12 +28,11 @@ window.createPeerOffer = async (caller) => {
                 if (e.candidate == null)
                     return
                 caller.invokeMethodAsync("addcandidate", e.candidate);
-                // console.info("New ice candidate.\n" + JSON.stringify(e.candidate.candidate));
             }
-            sendChannel = peerConnection.createDataChannel("sendChannel");
-            sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
-            sendChannel.onopen = e => console.log("open!!!!");
-            sendChannel.onclose = e => console.log("closed!!!!!!");
+            //sendChannel = peerConnection.createDataChannel("sendChannel");
+            //sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
+            //sendChannel.onopen = e => console.log("open!!!!");
+            //sendChannel.onclose = e => console.log("closed!!!!!!");
 
             const offer = await peerConnection.createOffer();
             console.log('offer created ', offer);
@@ -43,7 +42,7 @@ window.createPeerOffer = async (caller) => {
         .catch(error => {
             console.error('Error accessing media devices.', error);
         });
-    
+
 };
 
 window.joinCall = async (caller, offer, id) => {
@@ -78,14 +77,14 @@ window.joinCall = async (caller, offer, id) => {
                 // console.info("New ice candidate.\n" + JSON.stringify(e.candidate));
             }
 
-            peerConnection.ondatachannel = e => {
-                console.info('data channel received...')
-                sendChannel = e.channel;
-                sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
-                sendChannel.onopen = e => console.log("open!!!!");
-                sendChannel.onclose = e => console.log("closed!!!!!!");
-                peerConnection.channel = sendChannel;
-            }
+            //peerConnection.ondatachannel = e => {
+            //    console.info('data channel received...')
+            //    sendChannel = e.channel;
+            //    sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
+            //    sendChannel.onopen = e => console.log("open!!!!");
+            //    sendChannel.onclose = e => console.log("closed!!!!!!");
+            //    peerConnection.channel = sendChannel;
+            //}
 
             peerConnection.setRemoteDescription(offer);
             console.info('creating answer...')
@@ -100,7 +99,7 @@ window.joinCall = async (caller, offer, id) => {
         });
 
 
-    
+
 }
 
 async function openMediaDevices() {
@@ -137,6 +136,8 @@ async function hangup() {
         peerConnection.close();
         peerConnection = null;
     }
-    localStream.getTracks().forEach(track => track.stop());
-    localStream = null;
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
 };
