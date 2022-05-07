@@ -21,7 +21,7 @@ namespace BlazorRTC.UI.Pages
             dotNetHelper = DotNetObjectReference.Create(this);
 
             hubConnection = new HubConnectionBuilder()
-                .WithUrl("https://localhost:7282/blazorrtc")
+                .WithUrl(_configuration["ApiUrl"] + "blazorrtc")
                 .Build();
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning disable IDE0058 // Expression value is never used
@@ -94,6 +94,14 @@ namespace BlazorRTC.UI.Pages
             Console.WriteLine($"Offer: " + offer);
             _appStateManager.MeetingStarted=true;
             await js.InvokeVoidAsync("joinCall", dotNetHelper, offer, _appStateManager.CurrentMeetingId);
+        }
+
+        async Task HangUp()
+        {
+            await js.InvokeVoidAsync("hangup");
+            _appStateManager.MeetingStarted=false;
+            _appStateManager.CurrentMeetingId=null;
+            _appStateManager.Role= null;
         }
 
         async Task ToggleStatus(bool status)

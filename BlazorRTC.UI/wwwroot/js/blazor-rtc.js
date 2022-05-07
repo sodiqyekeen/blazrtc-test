@@ -131,3 +131,12 @@ function stopCamera(camera) {
         video.srcObject = null;
     }
 }
+
+async function hangup() {
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+};

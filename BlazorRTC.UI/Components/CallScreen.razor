@@ -1,9 +1,13 @@
 ﻿
 <MudContainer>
     <video muted id="local-video" autoplay></video>
-    <video muted id="remote-video" autoplay></video>
+    <video id="remote-video" autoplay></video>
     <div class="call-action-div">
-        <MudFab id="end-button" StartIcon="@Icons.Material.Filled.CallEnd" Color="Color.Error" />
+        <MudFab id="end-button" 
+        Disabled="@(!_appStateManager.MeetingStarted)" 
+        StartIcon="@Icons.Material.Filled.CallEnd" 
+        Color="Color.Error" 
+        OnClick="InvokeHangUp" />
         <MudFab id="end-button" StartIcon="@Icons.Material.Filled.MicOff" Color="Color.Warning" />
         <MudFab id="end-button" StartIcon="@Icons.Material.Filled.VideocamOff" Color="Color.Warning" />
     </div>
@@ -13,4 +17,8 @@
 
 @code {
 
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnHangUp { get; set; }
+
+    async Task InvokeHangUp() => await OnHangUp.InvokeAsync();
 }

@@ -2,10 +2,11 @@
 @implements IAsyncDisposable
 @inject IJSRuntime js
 @inject HttpClient _httpClient;
+@inject IConfiguration _configuration
 
 @if (_appStateManager.MeetingStarted)
 {
-    <CallScreen />
+    <CallScreen OnHangUp="HangUp" />
 }
 else
 {
