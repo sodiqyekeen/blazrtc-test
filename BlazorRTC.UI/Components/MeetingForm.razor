@@ -1,27 +1,24 @@
 ﻿@if (Join)
 {
-    <MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
-        <EditForm Model="joinForm" OnValidSubmit="HandleJoinSubmit">
-            <DataAnnotationsValidator />
-            <div class="d-flex align-end">
-                <MudTextField @bind-Value="joinForm.Username" For="(()=> joinForm.Username)" Label="Username" />
-                <MudTextField Class="mx-2" @bind-Value="joinForm.Meetingid" For="(()=> joinForm.Meetingid)" Label="MeetingId" />
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
-            </div>
-        </EditForm>
-    </MudPaper>
+
+    <EditForm Model="joinForm" OnValidSubmit="HandleJoinSubmit">
+        <DataAnnotationsValidator />
+        <div class="d-flex align-end">
+            <MudTextField @bind-Value="joinForm.Username" For="(()=> joinForm.Username)" Label="Username" />
+            <MudTextField Class="mx-2" @bind-Value="joinForm.Meetingid" For="(()=> joinForm.Meetingid)" Label="MeetingId" />
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
+        </div>
+    </EditForm>
 }
 else
 {
-    <MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
-        <EditForm Model="meetingForm" OnValidSubmit="HandleNewSubmit">
-            <DataAnnotationsValidator />
-            <div class="d-flex align-end">
-                <MudTextField @bind-Value="meetingForm.Username" For="(()=> meetingForm.Username)" Label="Username" />
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
-            </div>
-        </EditForm>
-    </MudPaper>
+    <EditForm Model="meetingForm" OnValidSubmit="HandleNewSubmit">
+        <DataAnnotationsValidator />
+        <div class="d-flex align-end">
+            <MudTextField @bind-Value="meetingForm.Username" For="(()=> meetingForm.Username)" Label="Username" />
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Dark">Submit</MudButton>
+        </div>
+    </EditForm>
 }
 @code {
     CreateMeetingRequest meetingForm = new();
@@ -32,7 +29,7 @@ else
 
     [Parameter]
     public EventCallback<CreateMeetingRequest> OnSubmitNew { get; set; }
-    
+
     [Parameter]
     public EventCallback<JoinMeetingRequest> OnSubmitJoin { get; set; }
 

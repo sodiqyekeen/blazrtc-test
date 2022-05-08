@@ -11,9 +11,11 @@
 else
 {
 
-    <MudPaper Class="d-flex  justify-center align-content-center" Height="700px" Elevation="0">
-        <MudSwitch T="bool" CheckedChanged="ToggleStatus" ThumbIcon="@thumbIcon">@(joinMeeting?"Join Call":"Start Call")</MudSwitch>
-        <MeetingForm OnSubmitNew="CreateMeeting" OnSubmitJoin="JoinMeeting" Join="joinMeeting" />
+    <MudPaper Class="d-flex flex-column  justify-center align-content-center" Height="700px" Elevation="0">
+        <MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
+            <MudSwitch T="bool" CheckedChanged="ToggleStatus" ThumbIcon="@thumbIcon">@(joinMeeting?"Join Call":"Start Call")</MudSwitch>
+            <MeetingForm OnSubmitNew="CreateMeeting" OnSubmitJoin="JoinMeeting" Join="joinMeeting" />
+        </MudPaper>
     </MudPaper>
 }
 

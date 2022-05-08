@@ -79,7 +79,7 @@ namespace BlazorRTC.UI.Pages
 
         public async Task CreateMeeting(CreateMeetingRequest request)
         {
-            meetingId=Guid.NewGuid().ToString()[..9];
+            meetingId=Guid.NewGuid().ToString()[..6];
             _appStateManager.CurrentMeetingId=meetingId;
             _appStateManager.Role = "caller";
             _appStateManager.MeetingStarted=true;

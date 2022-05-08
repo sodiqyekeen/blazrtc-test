@@ -1,10 +1,11 @@
-﻿let peerConnection;
+﻿'use strict';
+
+let peerConnection;
 let localStream;
 let sendChannel;
 window.createPeerOffer = async (caller) => {
-    const constraints = { video: { frameRate: 24, width: { min: 480, ideal: 720, max: 1280 }, aspectRatio: 1.33333 }, audio: true };
 
-    navigator.mediaDevices.getUserMedia(constraints)
+    openMediaDevices()
         .then(async stream => {
             console.log('Got MediaStream:', stream);
             localStream = stream;
@@ -12,17 +13,8 @@ window.createPeerOffer = async (caller) => {
             const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
             peerConnection = new RTCPeerConnection(configuration);
 
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
-
-            console.info('peer connection created...');
-            const remoteVideo = document.getElementById("remote-video");
-
-            peerConnection.addEventListener('track', async (event) => {
-                const [remoteStream] = event.streams;
-                remoteVideo.srcObject = remoteStream;
-            });
+            addLocalStream();
+            peerConnection.ontrack = gotRemoteStream;
 
             peerConnection.onicecandidate = e => {
                 if (e.candidate == null)
@@ -30,22 +22,30 @@ window.createPeerOffer = async (caller) => {
                 caller.invokeMethodAsync("addcandidate", e.candidate);
             }
 
-            const offer = await peerConnection.createOffer();
-            console.log('offer created ', offer);
-            caller.invokeMethodAsync("saveoffer", offer);
-            peerConnection.setLocalDescription(offer);
+            peerConnection.onconnectionstatechange = e => {
+                console.info('Connection state changed', e);
+            }
+
+            peerConnection.createOffer().then(offer => {
+                offerCreated(offer, caller);
+            });
         })
         .catch(error => {
             console.error('Error accessing media devices.', error);
         });
-
 };
+
+function offerCreated(offer, dotnetHelper) {
+    console.log('offer created ', offer);
+    dotnetHelper.invokeMethodAsync("saveoffer", offer);
+    peerConnection.setLocalDescription(offer);
+}
+
 
 window.joinCall = async (caller, offer, id) => {
     console.info('joinning call...', offer)
-    const constraints = { video: { frameRate: 24, width: { min: 480, ideal: 720, max: 1280 }, aspectRatio: 1.33333 }, audio: true };
 
-    navigator.mediaDevices.getUserMedia(constraints)
+    openMediaDevices()
         .then(async stream => {
             console.log('Got MediaStream:', stream);
             localStream = stream;
@@ -53,18 +53,8 @@ window.joinCall = async (caller, offer, id) => {
             const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
             peerConnection = new RTCPeerConnection(configuration);
 
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
-
-            console.info('peer connection created...')
-
-            const remoteVideo = document.getElementById("remote-video");
-
-            peerConnection.addEventListener('track', async (event) => {
-                const [remoteStream] = event.streams;
-                remoteVideo.srcObject = remoteStream;
-            });
+            addLocalStream();
+            peerConnection.ontrack = gotRemoteStream;
 
             peerConnection.onicecandidate = e => {
                 if (e.candidate == null)
@@ -74,22 +64,35 @@ window.joinCall = async (caller, offer, id) => {
 
             peerConnection.setRemoteDescription(offer);
             console.info('creating answer...')
-            const answer = await peerConnection.createAnswer();
-            console.info('answer created ', answer);
-            peerConnection.setLocalDescription(answer);
-            caller.invokeMethodAsync("sendanswer", id, answer);
-
+            peerConnection.createAnswer().then(answer => {
+                answerCreated(answer, caller, id);
+            });
         })
         .catch(error => {
             console.error('Error accessing media devices.', error);
         });
-
-
-
 }
 
-async function openMediaDevices() {
-    return await navigator.mediaDevices.getUserMedia({ video: { frameRate: 24, width: { min: 480, ideal: 720, max: 1280 }, aspectRatio: 1.33333 }, audio: true });
+function gotRemoteStream(e) {
+    console.log('gotRemoteStream', e.track, e.streams[0]);
+    const remoteVideo = document.getElementById("remote-video");
+    remoteVideo.srcObject = e.streams[0];
+}
+
+function answerCreated(answer, dotnetHelper, id) {
+    console.info('answer created ', answer);
+    peerConnection.setLocalDescription(answer);
+    dotnetHelper.invokeMethodAsync("sendanswer", id, answer);
+}
+
+function openMediaDevices() {
+    return navigator.mediaDevices.getUserMedia({ video: { frameRate: 24, width: { min: 480, ideal: 720, max: 1280 }, aspectRatio: 1.33333 }, audio: true });
+}
+
+function addLocalStream() {
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
 }
 
 function handleAnser(answer) {
@@ -134,4 +137,21 @@ function toggleVideo(status) {
 
 function toggleMic(status) {
     localStream.getAudioTracks()[0].enabled = status
+}
+
+function handleSuccess(stream) {
+    startButton.disabled = true;
+    //const video = document.querySelector('video');
+    // video.srcObject = stream;
+
+    // demonstrates how to detect that the user has stopped
+    // sharing the screen via the browser UI.
+    stream.getVideoTracks()[0].addEventListener('ended', () => {
+        errorMsg('The user has ended sharing the screen');
+        startButton.disabled = false;
+    });
+}
+
+function handleError(error) {
+    console.error(`getDisplayMedia error: ${error.name}`, error);
 }
