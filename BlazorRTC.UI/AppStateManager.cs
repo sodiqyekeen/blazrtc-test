@@ -68,6 +68,8 @@ namespace BlazorRTC.UI
             }
         }
 
+        public string ClientId { get; internal set; }
+
         public event Action? OnChange;
 
         private void NotifyStateChange() => OnChange?.Invoke();

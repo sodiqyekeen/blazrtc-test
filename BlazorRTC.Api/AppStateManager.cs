@@ -1,4 +1,6 @@
-﻿namespace BlazorRTC.Api
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace BlazorRTC.Api
 {
     public class AppStateManager
     {
@@ -46,6 +48,8 @@
             return _groups.First(g => g.id==id).Candidates;
         }
 
+        public List<Meeting> GetMeetings() => _meetings;
+
         public object? GetOffer(string id) => _groups.FirstOrDefault(g => g.id==id)?.offer;
 
         public void AddCandidate(string id, object candidate)
@@ -54,13 +58,46 @@
             if (group==null)
                 return;
             group.Candidates.Add(candidate);
-        } 
+        }
+
+        public void AddCandidate(string meetingId, object candidate, string clientId)
+        {
+            if (!TryGetMeeting(meetingId, out var meeting)) return;
+            if (!meeting.Participants.ContainsKey(clientId))
+            {
+                meeting.Participants.Add(clientId, new List<object> { candidate });
+                return;
+            }
+            meeting.Participants[clientId].Add(candidate);
+        }
+
+        public void JoinMeeting(string meetingId, string clientId)
+        {
+            if (!TryGetMeeting(meetingId, out var meeting)) return;
+            if (meeting.Participants.ContainsKey(clientId)) return;
+            meeting.Participants.Add(clientId, new());
+        }
         #endregion
 
-        public void CreateMeeting(string id, string username)
+        public void CreateMeeting(string meetingId, string clientId)
         {
-            var meeting = new Meeting(id, username);
-            
+            var meeting = new Meeting(meetingId, clientId);
+            _meetings.Add(meeting);
+        }
+
+        public void LeaveMeeting(string meetingId, string clientId)
+        {
+            // var meeting = _meetings.FirstOrDefault(m => m.Id==meetingId);
+            if (!TryGetMeeting(meetingId, out var meeting)) return;
+            //meeting.Participants.RemoveAll(p => p==clientId);
+            if (meeting.Participants.ContainsKey(clientId))
+                meeting.Participants.Remove(clientId);
+        }
+
+        private bool TryGetMeeting(string id, [NotNullWhen(true)] out Meeting? meeting)
+        {
+            meeting = _meetings.FirstOrDefault(m => m.Id==id);
+            return meeting !=null;
         }
 
     }
@@ -72,19 +109,19 @@
         public List<object> Candidates { get; set; } = new();
     }
 
+
+
     public class Meeting
     {
-        public Meeting(string id, string username)
+        public Meeting(string id, string createdBy)
         {
             Id=id;
-            Username=username;
-            Candidates = new();
+            CreatedBy=createdBy;
+            Participants.Add(createdBy, new());
         }
         public string Id { get; set; }
-        public string Username { get; set; }
-        public object? Offer { get; set; }
-        public object? Answer { get; set; }
-        public List<object> Candidates { get; set; }
+        public string CreatedBy { get; set; }
+        public Dictionary<string, List<object>> Participants { get; set; } = new();
     }
 
     //public class Call

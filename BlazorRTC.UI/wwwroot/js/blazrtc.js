@@ -1,110 +1,98 @@
-﻿let peerConnection;
+﻿'use strict';
+
+let peerConnection;
 let localStream;
 let sendChannel;
-
 window.createPeerOffer = async (caller) => {
-    try {
-        localStream = await openMediaDevices();
-        console.log('Got MediaStream:', localStream);
-    } catch (error) {
-        console.error('Error accessing media devices.', error);
-    }
 
-    document.getElementById("local-video").srcObject = localStream;
-    const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
-    peerConnection = new RTCPeerConnection(configuration);
-    //peerConnection.addStream(localStream);
-    localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-    });
-    //peerConnection.onaddstream = (e) => {
-    //    console.log("stream added.", e.stream);
-    //    document.getElementById("remote-video").srcObject = e.stream
-    //}
+    openMediaDevices()
+        .then(async stream => {
+            console.log('Got MediaStream:', stream);
+            localStream = stream;
+            document.getElementById("local-video").srcObject = localStream;
+            const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
+            peerConnection = new RTCPeerConnection(configuration);
 
-    const remoteVideo = document.getElementById("remote-video");
+            addLocalStream();
+            peerConnection.ontrack = gotRemoteStream;
 
-    peerConnection.addEventListener('track', async (event) => {
-        const [remoteStream] = event.streams;
-        remoteVideo.srcObject = remoteStream;
-    });
+            peerConnection.onicecandidate = e => {
+                if (e.candidate == null)
+                    return
+                caller.invokeMethodAsync("addcandidate", e.candidate);
+            }
 
-    peerConnection.onicecandidate = e => {
-        if (e.candidate == null)
-            return
-        caller.invokeMethodAsync("addcandidate", e.candidate);
-        // console.info("New ice candidate.\n" + JSON.stringify(e.candidate.candidate));
-    }
-    sendChannel = peerConnection.createDataChannel("sendChannel");
-    sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
-    sendChannel.onopen = e => console.log("open!!!!");
-    sendChannel.onclose = e => console.log("closed!!!!!!");
+            peerConnection.onconnectionstatechange = e => {
+                console.info('Connection state changed', e);
+            }
 
-    const offer = await peerConnection.createOffer();
-    console.log('offer created ', offer);
-    // caller.invokeMethodAsync("saveoffer", offer);
-    peerConnection.setLocalDescription(offer);
+            peerConnection.createOffer().then(offer => {
+                offerCreated(offer, caller);
+            });
+        })
+        .catch(error => {
+            console.error('Error accessing media devices.', error);
+        });
 };
+
+function offerCreated(offer, dotnetHelper) {
+    console.log('offer created ', offer);
+    dotnetHelper.invokeMethodAsync("saveoffer", offer);
+    peerConnection.setLocalDescription(offer);
+}
+
 
 window.joinCall = async (caller, offer, id) => {
     console.info('joinning call...', offer)
-    try {
-        localStream = await openMediaDevices();
-        console.log('Got MediaStream:', localStream);
-    } catch (error) {
-        console.error('Error accessing media devices.', error);
-    }
-    document.getElementById("local-video").srcObject = localStream;
-    const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
-    peerConnection = new RTCPeerConnection(configuration);
-    //peerConnection.addStream(localStream);
+
+    openMediaDevices()
+        .then(async stream => {
+            console.log('Got MediaStream:', stream);
+            localStream = stream;
+            document.getElementById("local-video").srcObject = localStream;
+            const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
+            peerConnection = new RTCPeerConnection(configuration);
+
+            addLocalStream();
+            peerConnection.ontrack = gotRemoteStream;
+
+            peerConnection.onicecandidate = e => {
+                if (e.candidate == null)
+                    return
+                caller.invokeMethodAsync("sendcandidate", e.candidate);
+            }
+
+            peerConnection.setRemoteDescription(offer);
+            console.info('creating answer...')
+            peerConnection.createAnswer().then(answer => {
+                answerCreated(answer, caller, id);
+            });
+        })
+        .catch(error => {
+            console.error('Error accessing media devices.', error);
+        });
+}
+
+function gotRemoteStream(e) {
+    console.log('gotRemoteStream', e.track, e.streams[0]);
+    const remoteVideo = document.getElementById("remote-video");
+    remoteVideo.srcObject = e.streams[0];
+}
+
+function answerCreated(answer, dotnetHelper, id) {
+    console.info('answer created ', answer);
+    peerConnection.setLocalDescription(answer);
+    dotnetHelper.invokeMethodAsync("sendanswer", id, answer);
+}
+
+function openMediaDevices() {
+    return navigator.mediaDevices.getUserMedia({ video: { frameRate: 24, width: { min: 480, ideal: 720, max: 1280 }, aspectRatio: 1.33333 }, audio: true });
+}
+
+function addLocalStream() {
     localStream.getTracks().forEach(track => {
         peerConnection.addTrack(track, localStream);
     });
-    console.info('peer connection created...')
-
-    //peerConnection.onaddstream = (e) => {
-    //    console.info("stream added.", e.stream);
-    //    document.getElementById("remote-video").srcObject = e.stream
-    //}
-    const remoteVideo = document.getElementById("remote-video");
-
-    peerConnection.addEventListener('track', async (event) => {
-        const [remoteStream] = event.streams;
-        remoteVideo.srcObject = remoteStream;
-    });
-
-    peerConnection.onicecandidate = e => {
-        if (e.candidate == null)
-            return
-        caller.invokeMethodAsync("sendcandidate", e.candidate);
-        // console.info("New ice candidate.\n" + JSON.stringify(e.candidate));
-    }
-
-    peerConnection.ondatachannel = e => {
-        console.info('data channel received...')
-        sendChannel = e.channel;
-        sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
-        sendChannel.onopen = e => console.log("open!!!!");
-        sendChannel.onclose = e => console.log("closed!!!!!!");
-        peerConnection.channel = sendChannel;
-    }
-
-    peerConnection.setRemoteDescription(offer);
-    console.info('creating answer...')
-    const answer = await peerConnection.createAnswer();
-    console.info('answer created ', answer);
-    peerConnection.setLocalDescription(answer);
-    caller.invokeMethodAsync("sendanswer", id, answer);
-
-    //}, error => {
-    //    console.log(error)
-    //});
-    //console.info(JSON.stringify(peerConnection.localDescription));
-}
-
-async function openMediaDevices() {
-    return await navigator.mediaDevices.getUserMedia({ video: { frameRate: 24, width: { min: 480, ideal: 720, max: 1280 }, aspectRatio: 1.33333 }, audio: true });
 }
 
 function handleAnser(answer) {
@@ -130,4 +118,40 @@ function stopCamera(camera) {
         tracks.forEach(track => track.stop());
         video.srcObject = null;
     }
+}
+
+async function hangup() {
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+};
+
+function toggleVideo(status) {
+    localStream.getVideoTracks()[0].enabled = status
+}
+
+function toggleMic(status) {
+    localStream.getAudioTracks()[0].enabled = status
+}
+
+function handleSuccess(stream) {
+    startButton.disabled = true;
+    //const video = document.querySelector('video');
+    // video.srcObject = stream;
+
+    // demonstrates how to detect that the user has stopped
+    // sharing the screen via the browser UI.
+    stream.getVideoTracks()[0].addEventListener('ended', () => {
+        errorMsg('The user has ended sharing the screen');
+        startButton.disabled = false;
+    });
+}
+
+function handleError(error) {
+    console.error(`getDisplayMedia error: ${error.name}`, error);
 }

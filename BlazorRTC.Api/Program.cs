@@ -43,6 +43,7 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast");
 
 app.MapGet("/users", ([FromServices] AppStateManager appStateManager) => appStateManager.GetUsers());
+app.MapGet("/meetings", ([FromServices] AppStateManager appStateManager) => appStateManager.GetMeetings());
 app.MapGet("/offers/{id}", ([FromServices] AppStateManager appStateManager, [FromRouteAttribute] string id) => appStateManager.GetOffer(id));
 app.MapGet("/candidates/{id}", ([FromServices] AppStateManager appStateManager, [FromRouteAttribute] string id) => appStateManager.GetCandidates(id));
 
