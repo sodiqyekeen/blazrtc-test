@@ -7,9 +7,10 @@ namespace BlazorRTC.UI
         private string? _currentMeetingId;
         private string? _role;
         private bool _meetingStarted;
-        private bool _videoOn;
-        private bool _micOn;
+        private bool _videoOff;
+        private bool _micOff;
         private bool _speakerOn;
+        private List<string>? _remoteIds;
         public string? CurrentMeetingId
         {
             get => _currentMeetingId;
@@ -41,19 +42,19 @@ namespace BlazorRTC.UI
 
         public bool VideoOff
         {
-            get => _videoOn;
+            get => _videoOff;
             set
             {
-                _videoOn=value;
+                _videoOff=value;
                 NotifyStateChange();
             }
         }
         public bool MicOff
         {
-            get => _micOn;
+            get => _micOff;
             set
             {
-                _micOn=value;
+                _micOff=value;
                 NotifyStateChange();
             }
         }
@@ -68,10 +69,32 @@ namespace BlazorRTC.UI
             }
         }
 
-        public string ClientId { get; internal set; }
+        public List<string> RemoteIds
+        {
+            get => _remoteIds ??= new List<string>();
+            set
+            {
+                _remoteIds=value;
+
+                NotifyStateChange();
+            }
+        }
+
+        public string? ClientId { get; set; }
 
         public event Action? OnChange;
 
         private void NotifyStateChange() => OnChange?.Invoke();
+
+        public void Reset()
+        {
+            _micOff=false;
+            _videoOff=false;
+            _meetingStarted=false;
+            _role =null;
+            _currentMeetingId=null;
+            _remoteIds=null;
+            NotifyStateChange();
+        }
     }
 }

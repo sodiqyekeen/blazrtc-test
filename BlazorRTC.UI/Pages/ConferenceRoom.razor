@@ -6,16 +6,17 @@
 
 @if (_appStateManager.MeetingStarted)
 {
-    <CallScreen OnHangUp="HangUp" OnToggleMic="ToggleMic" OnToggleVideo="ToggleVideo" />
+    <ConferenceScreen OnHangUp="HangUp" OnToggleMic="ToggleMic" OnToggleVideo="ToggleVideo" />
 }
 else
 {
 
-    <MudPaper Class="d-flex flex-column  justify-center align-content-center" Height="700px" Elevation="0">
-        <MudPaper Class="pa-2 align-self-center" Width="300px" Height="100px" Elevation="0">
-            <MudSwitch T="bool" CheckedChanged="ToggleStatus" ThumbIcon="@thumbIcon">@(joinMeeting?"Join Call":"Start Call")</MudSwitch>
+    <div class="d-flex justify-center align-center" style="height:calc(100vh - 64px);">
+        <MudPaper Class="pa-4 mx-2 d-flex flex-column align-stretch" MinWidth="350px"  Elevation="2">
+            <MudSwitch T="bool" Class="align-self-center" CheckedChanged="ToggleStatus" ThumbIcon="@thumbIcon">@(joinMeeting?"Join Call":"Start Call")</MudSwitch>
             <MeetingForm OnSubmitNew="CreateMeeting" OnSubmitJoin="JoinMeeting" Join="joinMeeting" />
         </MudPaper>
-    </MudPaper>
+    </div>
 }
 
+@*<ConferenceScreen />*@

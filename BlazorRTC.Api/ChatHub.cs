@@ -79,7 +79,7 @@ namespace BlazorRTC.Api
         {
             _appStateManager.LeaveMeeting(meetingId, clientId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, meetingId);
-            await Clients.Group(meetingId).SendAsync("NotifyMeeting", $"{clientId} left the call.");
+            await Clients.Group(meetingId).SendAsync("Disconnected", meetingId, clientId);
         }
 
     }

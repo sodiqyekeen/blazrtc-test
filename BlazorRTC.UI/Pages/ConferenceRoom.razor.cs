@@ -2,13 +2,11 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using System.Net.Http.Json;
 
 namespace BlazorRTC.UI.Pages
 {
     public partial class ConferenceRoom
     {
-        //string? meetingId;
         private IJSObjectReference? module;
         private DotNetObjectReference<ConferenceRoom>? dotNetHelper;
         private HubConnection? hubConnection;
@@ -49,6 +47,7 @@ namespace BlazorRTC.UI.Pages
                 {
                     Console.WriteLine($"received offer for ({meetingId})");
                     _appStateManager.MeetingStarted=true;
+                    _appStateManager.RemoteIds.Add(clientId);
                     StateHasChanged();
                     await js.InvokeVoidAsync("joinCall", dotNetHelper, offer, clientId);
                 }
@@ -57,11 +56,21 @@ namespace BlazorRTC.UI.Pages
             hubConnection?.On<string, string>("JoinRequest", async (meetingId, clientId) =>
             {
                 Console.WriteLine($"{clientId} is waiting to join ({meetingId})");
-                Console.WriteLine(_appStateManager.CurrentMeetingId==meetingId);
+                _appStateManager.RemoteIds.Add(clientId);
+                StateHasChanged();
                 if (_appStateManager.CurrentMeetingId==meetingId)
                     await js.InvokeVoidAsync("createPeerOffer", dotNetHelper, clientId);
             });
-            hubConnection.Closed += error => ConnectWithRetryAsync(hubConnection, cts.Token);
+
+            hubConnection?.On<string, string>("Disconnected", (meetingId, clientId) =>
+            {
+                Console.WriteLine($"{clientId} left ({meetingId})");
+                _appStateManager.RemoteIds.Remove(clientId);
+                StateHasChanged();
+            });
+
+
+            hubConnection!.Closed += error => ConnectWithRetryAsync(hubConnection, cts.Token);
         }
         #region JS 
 
@@ -75,14 +84,14 @@ namespace BlazorRTC.UI.Pages
         public async Task SaveOffer(object offer, string clientId)
         {
             Console.WriteLine("Adding offer...");
-            await hubConnection.InvokeAsync("SendOffer", _appStateManager.CurrentMeetingId, offer, clientId);
+            await hubConnection!.InvokeAsync("SendOffer", _appStateManager.CurrentMeetingId, offer, clientId);
         }
 
         [JSInvokable("sendcandidate")]
         public async Task SendCandidate(object candidate, string clientId)
         {
             Console.WriteLine("Sending candidate...");
-            await hubConnection.InvokeAsync("SendMeetingCandidate", _appStateManager.CurrentMeetingId, candidate, clientId);
+            await hubConnection!.InvokeAsync("SendMeetingCandidate", _appStateManager.CurrentMeetingId, candidate, clientId);
         }
 
         [JSInvokable("sendanswer")]
@@ -110,19 +119,14 @@ namespace BlazorRTC.UI.Pages
             _appStateManager.CurrentMeetingId = request.Meetingid;
             _appStateManager.Role = "receiver";
             await hubConnection!.InvokeAsync("JoinMeeting", _appStateManager.CurrentMeetingId, _appStateManager.ClientId);
-            //var offer = await _httpClient.GetFromJsonAsync<object>($"offers/{_appStateManager.CurrentMeetingId}");
-            //Console.WriteLine($"Offer: " + offer);
-            //_appStateManager.MeetingStarted=true;
-            //await js.InvokeVoidAsync("joinCall", dotNetHelper, offer, _appStateManager.CurrentMeetingId);
         }
 
         async Task HangUp()
         {
-            await js.InvokeVoidAsync("hangup");
+            await js.InvokeVoidAsync("hangup", _appStateManager.ClientId);
             await hubConnection!.InvokeAsync("EndMeeting", _appStateManager.CurrentMeetingId, _appStateManager.ClientId);
-            _appStateManager.MeetingStarted=false;
-            _appStateManager.CurrentMeetingId=null;
-            _appStateManager.Role= null;
+            _appStateManager.Reset();
+
         }
 
         async Task ToggleVideo()
@@ -152,7 +156,7 @@ namespace BlazorRTC.UI.Pages
             }
             _appStateManager.ClientId=id;
         }
-        public async Task<bool> ConnectWithRetryAsync(HubConnection hubConnection, CancellationToken cancellationToken)
+        public static async Task<bool> ConnectWithRetryAsync(HubConnection hubConnection, CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -182,6 +186,7 @@ namespace BlazorRTC.UI.Pages
             {
                 await hubConnection.DisposeAsync();
             }
+            await js.InvokeVoidAsync("hangup", _appStateManager.ClientId);
         }
     }
 }

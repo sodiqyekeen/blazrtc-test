@@ -9,19 +9,23 @@ window.createPeerOffer = async (caller, clientId) => {
     const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
     const currentPeerConn = new RTCPeerConnection(configuration);
     peerConnections[clientId] = currentPeerConn;
-    console.info('connection created', clientId, currentPeerConn);
+    //console.info('connection created', clientId, currentPeerConn);
     addLocalStream(currentPeerConn);
-    currentPeerConn.ontrack = gotRemoteStream;
+
+    currentPeerConn.ontrack = e => {
+        gotRemoteStream(e, clientId);
+    }
 
     currentPeerConn.onicecandidate = e => {
         if (e.candidate == null)
             return
+        console.info('candidate created: ', e.candidate);
         caller.invokeMethodAsync("addcandidate", e.candidate, clientId);
     }
 
-    currentPeerConn.onconnectionstatechange = e => {
-        console.info('Connection state changed', e);
-    }
+    //currentPeerConn.onconnectionstatechange = e => {
+    //    console.info('Connection state changed', e);
+    //}
     console.info('creating offer...');
     currentPeerConn.createOffer().then(offer => {
         offerCreated(offer, caller, clientId, currentPeerConn);
@@ -31,29 +35,33 @@ window.createPeerOffer = async (caller, clientId) => {
 
 
 function offerCreated(offer, dotnetHelper, clientId, peerConn) {
-    console.log('offer created ', offer);
+    //console.log('offer created ', offer);
     dotnetHelper.invokeMethodAsync("saveoffer", offer, clientId);
     peerConn.setLocalDescription(offer);
 }
 
 
 window.joinCall = async (caller, offer, clientId) => {
-    console.info('joinning call...', offer)
+    //console.info('joinning call...', offer)
 
     openMediaDevices()
         .then(async stream => {
-            console.log('Got MediaStream:', stream);
+            //console.log('Got MediaStream:', stream);
             localStream = stream;
             document.getElementById("local-video").srcObject = localStream;
             const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
             const currentConnection = new RTCPeerConnection(configuration);
             peerConnections[clientId] = currentConnection;
             addLocalStream(currentConnection);
-            currentConnection.ontrack = gotRemoteStream;
+          
+            currentConnection.ontrack = e => {
+                gotRemoteStream(e, clientId);                
+            }
 
             currentConnection.onicecandidate = e => {
                 if (e.candidate == null)
                     return
+                console.info('candidate created: ', e.candidate);
                 caller.invokeMethodAsync("sendcandidate", e.candidate, clientId);
             }
 
@@ -69,14 +77,14 @@ window.joinCall = async (caller, offer, clientId) => {
 }
 
 function gotLocalStream(stream) {
-    console.log('Got local stream', stream);
+    //console.log('Got local stream', stream);
     document.getElementById("local-video").srcObject = stream;
     localStream = stream;
 }
 
-function gotRemoteStream(e) {
+function gotRemoteStream(e,clientId) {
     console.log('gotRemoteStream', e.track, e.streams[0]);
-    const remoteVideo = document.getElementById("remote-video");
+    const remoteVideo = document.getElementById(clientId);
     //if (remoteVideo.srcObject) {
     //    console.info('already had remote stream.');
     //    return;
@@ -126,11 +134,18 @@ function stopCamera(camera) {
     }
 }
 
-async function hangup() {
-    if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
+function hangup(clientId) {
+
+    try {
+        if (clientId in peerConnections) {
+            peerConnections[clientId].close();
+            peerConnections[clientId] = null;
+            delete peerConnections[clientId];
+        }
+    } catch (error) {
+        console.error('Error disconnecting ', clientId, error);
     }
+
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;

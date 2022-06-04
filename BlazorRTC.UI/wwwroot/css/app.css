@@ -31,14 +31,16 @@
 
 #local-video {
     position: absolute;
-    top: 64px;
-    left: 0;
+    bottom: 64px;
+    right: 0;
     margin: 16px;
     border-radius: 16px;
     max-width: 20%;
-    max-height: auto !important;
+    height: auto !important;
     background: #ffffff;
+    transform: scaleX(-1);
 }
+
 /*
 #remote-video {
     background: #000000;
@@ -46,9 +48,18 @@
     height: 100%;
 }*/
 
+#meeting-screen {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    background: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) ), url('/images/app-bg.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
 
 
-#remote-video {
+/*#remote-video {
     background: #000000;
     width: 100vw;
     height: 100vh;
@@ -56,7 +67,7 @@
     top: 0;
     left: 0;
     z-index: -1;
-}
+}*/
 
 .call-action-div {
     position: fixed;
@@ -68,3 +79,5 @@
 #home-wrapper {
     height: calc(100% - 64px);
 }
+
+

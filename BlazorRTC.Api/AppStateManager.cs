@@ -91,7 +91,12 @@ namespace BlazorRTC.Api
             if (!TryGetMeeting(meetingId, out var meeting)) return;
             //meeting.Participants.RemoveAll(p => p==clientId);
             if (meeting.Participants.ContainsKey(clientId))
-                meeting.Participants.Remove(clientId);
+            {
+                if (meeting.CreatedBy == clientId)
+                    _meetings.Remove(meeting);
+                else
+                    meeting.Participants.Remove(clientId);
+            }
         }
 
         private bool TryGetMeeting(string id, [NotNullWhen(true)] out Meeting? meeting)

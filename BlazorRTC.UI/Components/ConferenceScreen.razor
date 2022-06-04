@@ -1,0 +1,49 @@
+﻿
+<div class="d-flex flex-column align-stretch align-content-space-between" style="height:calc(100vh - 64px);">
+
+    <MudPaper Class="d-flex flex-1 pa-8 mud-theme-primary justify-center align-center flex-wrap gap-4" Elevation="0">
+        @foreach (var id in _appStateManager.RemoteIds)
+        {
+            <Video Id="@id" />
+        } 
+       @* @for (var id = 0; id<4; id++)
+        {
+            <Video Id="@id.ToString()" />
+        }*@
+    </MudPaper>
+
+    <MudPaper Class="d-flex  mt-auto justify-center align-center gap-1" Elevation="2" Height="80px">
+        <MudFab id="end-button"
+                StartIcon="@Icons.Material.Filled.CallEnd"
+                Color="Color.Error"
+                OnClick="InvokeHangUp" />
+        <MudFab id="end-button"
+                StartIcon="@Icons.Material.Filled.MicOff"
+                Color="@(_appStateManager.MicOff? Color.Dark : Color.Surface)"
+                OnClick="InvokeToggleMic" />
+
+        <MudFab id="end-button"
+                StartIcon="@Icons.Material.Filled.VideocamOff"
+                Color="@(_appStateManager.VideoOff? Color.Dark : Color.Surface)"
+                OnClick="InvokeToggleVideo" />
+    </MudPaper>
+    <MudPaper Elevation="2">
+        <video muted id="local-video" autoplay></video>
+    </MudPaper>
+</div>
+
+@code {
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnHangUp { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnToggleMic { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnToggleVideo { get; set; }
+
+    async Task InvokeHangUp() => await OnHangUp.InvokeAsync();
+    async Task InvokeToggleMic() => await OnToggleMic.InvokeAsync();
+    async Task InvokeToggleVideo() => await OnToggleVideo.InvokeAsync();
+}
